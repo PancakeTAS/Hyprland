@@ -9,13 +9,14 @@
 #include "KeybindManager.hpp"
 #include "PointerManager.hpp"
 #include "Compositor.hpp"
+#include "SharedDefs.hpp"
 #include "TokenManager.hpp"
-#include "eventLoop/EventLoopManager.hpp"
 #include "debug/Log.hpp"
-#include "helpers/varlist/VarList.hpp"
+#include "helpers/Monitor.hpp"
 
 #include <optional>
 #include <iterator>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <cstring>
@@ -94,6 +95,8 @@ CKeybindManager::CKeybindManager() {
     m_mDispatchers["movecurrentworkspacetomonitor"]  = moveCurrentWorkspaceToMonitor;
     m_mDispatchers["focusworkspaceoncurrentmonitor"] = focusWorkspaceOnCurrentMonitor;
     m_mDispatchers["moveworkspacetomonitor"]         = moveWorkspaceToMonitor;
+    m_mDispatchers["bulkswitchworkspaces"]           = bulkSwitchWorkspaces;
+    m_mDispatchers["bulkrenameworkspaces"]           = bulkRenameWorkspaces;
     m_mDispatchers["togglespecialworkspace"]         = toggleSpecialWorkspace;
     m_mDispatchers["forcerendererreload"]            = forceRendererReload;
     m_mDispatchers["resizeactive"]                   = resizeActive;
@@ -1839,6 +1842,77 @@ SDispatchResult CKeybindManager::moveWorkspaceToMonitor(std::string args) {
     }
 
     g_pCompositor->moveWorkspaceToMonitor(PWORKSPACE, PMONITOR);
+
+    return {};
+}
+
+SDispatchResult CKeybindManager::bulkSwitchWorkspaces(std::string args) {
+    if (!args.contains(' '))
+        return {};
+
+    std::istringstream iss(args);
+    std::string        token;
+    while (std::getline(iss, token, ' ')) {
+
+        std::istringstream tokeniss(token);
+        std::string        monitor, workspace;
+        if (
+            std::getline(tokeniss, monitor, ';') &&
+            std::getline(tokeniss, workspace, ';')
+        ) {
+
+            CMonitor* PMONITOR = g_pCompositor->getMonitorFromString(monitor);
+
+            if (!PMONITOR) {
+                Debug::log(ERR, "Ignoring bulkSwitchWorkspaces: monitor doesnt exist");
+                return {.success = false, .error = "Ignoring bulkSwitchWorkspaces: monitor doesnt exist"};
+            }
+
+            SWorkspaceIDName sWorkspace = getWorkspaceIDNameFromString("name:" + workspace);
+            auto PWORKSPACE = g_pCompositor->getWorkspaceByID(sWorkspace.id);
+
+            if (!PWORKSPACE) {
+                PWORKSPACE = g_pCompositor->createNewWorkspace(sWorkspace.id, PMONITOR->ID, sWorkspace.name);
+                PWORKSPACE->m_bPersistent = true;
+            }
+
+            PMONITOR->changeWorkspace(PWORKSPACE->m_iID, false, true);
+
+        }
+
+    }
+
+    return {};
+}
+
+SDispatchResult CKeybindManager::bulkRenameWorkspaces(std::string args) {
+    if (!args.contains(' '))
+        return {};
+
+    std::istringstream iss(args);
+    std::string        token;
+    while (std::getline(iss, token, ' ')) {
+
+        std::istringstream tokeniss(token);
+        std::string        workspace, name;
+        if (
+            std::getline(tokeniss, workspace, ';') &&
+            std::getline(tokeniss, name, ';')
+        ) {
+
+            auto PWORKSPACE = g_pCompositor->getWorkspaceByName(workspace);
+
+            if (!PWORKSPACE) {
+                Debug::log(ERR, "Ignoring bulkRenameWorkspaces: workspace doesnt exist");
+                return {.success = false, .error = "Ignoring bulkRenameWorkspaces: workspace doesnt exist"};
+            }
+
+            g_pCompositor->renameWorkspace(PWORKSPACE->m_iID, name);
+
+        }
+
+    }
+
 
     return {};
 }

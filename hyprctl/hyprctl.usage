@@ -142,6 +142,8 @@ hyprctl [<OPTIONS>]... <ARGUMENTS>
                 |  (movecurrentworkspacetomonitor)           	      "Move the active workspace to a monitor"
                 |  (focusworkspaceoncurrentmonitor)          	      "Focus the requested workspace"
                 |  (moveworkspacetomonitor)          	              "Move a workspace to a monitor"
+                |  (bulkswitchworkspaces)          	                  "Switch workspaces in bulk"
+                |  (bulkrenameworkspaces)          	                  "Rename workspaces in bulk"
                 |  (swapactiveworkspaces)            	              "Swap the active workspaces between two monitors"
                 |  (alterzorder)         	                          "Modify the window stack order of the active or specified window"
                 |  (togglespecialworkspace)          	              "Toggle a special workspace on/off"

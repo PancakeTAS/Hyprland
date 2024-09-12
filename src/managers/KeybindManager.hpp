@@ -185,6 +185,8 @@ class CKeybindManager {
     static SDispatchResult exitHyprland(std::string);
     static SDispatchResult moveCurrentWorkspaceToMonitor(std::string);
     static SDispatchResult moveWorkspaceToMonitor(std::string);
+    static SDispatchResult bulkSwitchWorkspaces(std::string);
+    static SDispatchResult bulkRenameWorkspaces(std::string);
     static SDispatchResult focusWorkspaceOnCurrentMonitor(std::string);
     static SDispatchResult toggleSpecialWorkspace(std::string);
     static SDispatchResult forceRendererReload(std::string);
